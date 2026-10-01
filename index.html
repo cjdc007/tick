@@ -141,11 +141,16 @@ ul{list-style:none;margin:0;padding:0}
 .scrim{position:absolute;inset:0;background:rgba(10,10,25,.5)}
 .sheet{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;background:var(--surface);border-radius:28px 28px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.9,.3,1)}
 .wrap.open .sheet{transform:none}
-.sheet h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0 0 14px}
+.sheet h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0}
+.grab{touch-action:none;cursor:grab;margin:-20px -20px 14px;padding:10px 20px 12px;user-select:none;-webkit-user-select:none}
+.grab::before{content:"";display:block;width:40px;height:5px;border-radius:3px;background:var(--line-strong);margin:0 auto 12px}
+.sheet.dragging{transition:none}
+.scrim{transition:opacity .3s}
 .fld{margin-bottom:14px}
 .fld>label,.fld>.lab{display:block;font-size:14px;font-weight:600;margin-bottom:6px;color:var(--muted)}
 .in{width:100%;height:50px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;padding:0 12px}
 .two{display:grid;grid-template-columns:1.3fr 1fr;gap:10px}
+.two .in{min-width:0}
 .quick{display:flex;gap:8px;margin-top:8px}
 .quick button{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:14px}
 .seg{display:flex;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
@@ -225,7 +230,7 @@ ul{list-style:none;margin:0;padding:0}
 <div class="wrap" id="wrap">
   <div class="scrim" id="scrim"></div>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" id="sheet">
-    <h2 id="sheetTitle">New chore</h2>
+    <div class="grab" id="grab"><h2 id="sheetTitle">New chore</h2></div>
     <div class="fld"><label for="fTitle">What needs doing?</label><input class="in" id="fTitle" maxlength="80" placeholder="Wash the dishes" autocomplete="off"></div>
     <div class="fld">
       <span class="lab">When</span>
@@ -245,7 +250,7 @@ ul{list-style:none;margin:0;padding:0}
       <select class="in" id="fRemind"><option value="0">At the time</option><option value="5">5 minutes before</option><option value="10" selected>10 minutes before</option><option value="30">30 minutes before</option><option value="60">1 hour before</option></select>
     </div>
     <p class="err" id="err" role="alert"></p>
-    <div class="acts"><button class="btn danger" id="delBtn" hidden>Delete</button><button class="btn ghost" id="cancelBtn">Cancel</button><button class="btn primary" id="saveBtn">Save chore</button></div>
+    <div class="acts"><button class="btn danger" id="delBtn" hidden>Delete</button><button class="btn primary" id="saveBtn">Save chore</button></div>
   </div>
 </div>
 
@@ -490,7 +495,29 @@ function openSheet(id,prefill){
   $('#wrap').classList.add('open');
   setTimeout(function(){$('#fTitle').focus()},60);
 }
-function closeSheet(){$('#wrap').classList.remove('open')}
+function closeSheet(){$('#wrap').classList.remove('open');$('#sheet').style.transform='';$('#scrim').style.opacity=''}
+/* drag the handle/title down to dismiss */
+(function(){
+  var sh=$('#sheet'),sc=$('#scrim'),y0=0,dy=0,t0=0,drag=false,pid=null;
+  function end(e){
+    if(!drag)return;drag=false;sh.classList.remove('dragging');
+    var fast=dy/Math.max(1,Date.now()-t0)>0.6;
+    if(dy>110||(fast&&dy>30)){
+      sh.style.transform='translateY(100%)';sc.style.opacity='0';
+      setTimeout(closeSheet,reduced?0:300);
+    }else{sh.style.transform='';sc.style.opacity=''}
+  }
+  $('#grab').addEventListener('pointerdown',function(e){
+    drag=true;pid=e.pointerId;y0=e.clientY;dy=0;t0=Date.now();sh.classList.add('dragging');
+    try{this.setPointerCapture(pid)}catch(x){}
+  });
+  $('#grab').addEventListener('pointermove',function(e){
+    if(!drag)return;dy=Math.max(0,e.clientY-y0);
+    sh.style.transform='translateY('+dy+'px)';sc.style.opacity=String(Math.max(0,1-dy/sh.offsetHeight));
+  });
+  $('#grab').addEventListener('pointerup',end);
+  $('#grab').addEventListener('pointercancel',end);
+})();
 function saveSheet(){
   var title=$('#fTitle').value.trim(),date=$('#fDate').value,time=$('#fTime').value,err=$('#err');
   function bad(m){err.textContent=m;var s=$('#sheet');s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake')}
@@ -510,7 +537,6 @@ function syncTabs(){document.querySelectorAll('.tab').forEach(function(b){b.setA
 
 $('#fab').addEventListener('click',function(){openSheet()});
 $('#scrim').addEventListener('click',closeSheet);
-$('#cancelBtn').addEventListener('click',closeSheet);
 $('#saveBtn').addEventListener('click',saveSheet);
 $('#fTitle').addEventListener('keydown',function(e){if(e.key==='Enter')saveSheet()});
 addEventListener('keydown',function(e){if(e.key==='Escape')closeSheet()});
