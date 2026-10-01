@@ -263,8 +263,8 @@ ul{list-style:none;margin:0;padding:0}
 'use strict';
 var $=function(s){return document.querySelector(s)};
 var KEY='tick:v1', memory=null;
-var APP_VERSION='v7'; /* keep in step with CACHE_VERSION in sw.js */
-$('#ver').textContent=APP_VERSION;
+var APP_VERSION='1.4.1'; /* keep in step with CACHE_VERSION in sw.js */
+$('#ver').textContent='v'+APP_VERSION;
 var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- state ---------- */
