@@ -1,6 +1,6 @@
 // Tick service worker: makes the app load offline.
 // Bump CACHE_VERSION whenever you change any app file so phones pick up the update.
-const CACHE_VERSION = 'tick-v6';
+const CACHE_VERSION = 'tick-v7';
 const FONT_CACHE = 'tick-fonts-v1';
 const APP_FILES = [
   './',
@@ -42,12 +42,15 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // App files: cache first, fall back to network, fall back to the app shell.
+  // App files: network first (bypassing the HTTP cache) so updates show up on the next online load; cache when offline.
   if (url.origin === location.origin) {
     e.respondWith(
-      caches.match(req).then((hit) =>
-        hit || fetch(req).catch(() => (req.mode === 'navigate' ? caches.match('./index.html') : undefined))
-      )
+      fetch(req, { cache: 'no-cache' })
+        .then((res) => {
+          if (res.ok) { const copy = res.clone(); caches.open(CACHE_VERSION).then((c) => c.put(req, copy)); }
+          return res;
+        })
+        .catch(() => caches.match(req).then((hit) => hit || (req.mode === 'navigate' ? caches.match('./index.html') : undefined)))
     );
   }
 });

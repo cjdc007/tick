@@ -29,6 +29,13 @@ else for (const [, p] of list[1].matchAll(/'([^']+)'/g)) {
   existsSync(path) ? ok(`precached ${p}`) : fail(`sw.js precaches missing file ${p}`);
 }
 
+// 2b. Visible app version matches the service worker cache version.
+{
+  const av = html.match(/APP_VERSION='([^']+)'/), cv = sw.match(/CACHE_VERSION = 'tick-([^']+)'/);
+  if (!av || !cv) fail('APP_VERSION (index.html) or CACHE_VERSION (sw.js) not found');
+  else av[1] === cv[1] ? ok(`version ${av[1]}`) : fail(`APP_VERSION ${av[1]} != CACHE_VERSION tick-${cv[1]}`);
+}
+
 // 3. Manifest is valid JSON and its icons exist.
 try {
   const m = JSON.parse(readFileSync('manifest.webmanifest', 'utf8'));

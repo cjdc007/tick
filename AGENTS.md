@@ -5,7 +5,7 @@ Users install it on their phone from a static host (see `README.txt`).
 
 ## Layout
 - `index.html`: the whole app. One inline `<style>` (CSS variables, light/dark) and one inline IIFE `<script>` (state, rendering, sound, confetti, alerts, bottom sheet). Plain ES5-style JS (`var`, function expressions); match it.
-- `sw.js`: service worker. Cache-first for app files, stale-while-revalidate for Google Fonts.
+- `sw.js`: service worker. Network-first (no HTTP cache) for app files with offline fallback, stale-while-revalidate for Google Fonts.
 - `manifest.webmanifest`: PWA manifest. Icons are in `icons/`.
 - `scripts/check.mjs`: sanity checks. `scripts/dev.sh`: local server.
 
@@ -15,7 +15,7 @@ Users install it on their phone from a static host (see `README.txt`).
 - Browser testing: Chromium + Playwright are available in the cloud env (`PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`). Don't run `playwright install`.
 
 ## Rules
-- **Bump `CACHE_VERSION` in `sw.js`** whenever you change `index.html`, the manifest, or any icon; otherwise installed phones keep the old version. Adding or renaming a file also means updating `APP_FILES`.
+- **Bump the version on every change** to `index.html`, the manifest, or any icon: `CACHE_VERSION` in `sw.js` (`tick-vN`) and `APP_VERSION` in `index.html` (`vN`) must match (`check.mjs` enforces it). `APP_VERSION` is shown next to the Tick logo so users can tell whether their phone has the latest build. Adding or renaming a file also means updating `APP_FILES`.
 - Keep it dependency-free and single-file. Don't add a bundler/framework without being asked. The only external resource is Google Fonts, and it must degrade gracefully offline (system font fallbacks are already in `--display`/`--body`).
 - Persistence is `localStorage` under key `tick:v1` with an in-memory fallback. State shape: `{chores, log, stats:{points,streak,lastDay}, sound}`. If you change the shape, stay backward compatible with existing saved data (`Object.assign` defaults at load) or migrate it.
 - Dates are local-time `YYYY-MM-DD` strings (`iso`/`parse` helpers), not UTC. Avoid `toISOString()` for day keys.
