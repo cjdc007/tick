@@ -32,7 +32,9 @@ else for (const [, p] of list[1].matchAll(/'([^']+)'/g)) {
 // 2b. Visible app version matches the service worker cache version.
 {
   const av = html.match(/APP_VERSION='([^']+)'/), cv = sw.match(/CACHE_VERSION = 'tick-([^']+)'/);
+  const semver = /^\d+\.\d+\.\d+$/;
   if (!av || !cv) fail('APP_VERSION (index.html) or CACHE_VERSION (sw.js) not found');
+  else if (!semver.test(av[1])) fail(`APP_VERSION ${av[1]} is not MAJOR.MINOR.PATCH`);
   else av[1] === cv[1] ? ok(`version ${av[1]}`) : fail(`APP_VERSION ${av[1]} != CACHE_VERSION tick-${cv[1]}`);
 }
 
