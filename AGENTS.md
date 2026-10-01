@@ -1,13 +1,14 @@
 # Tick: agent guide
 
-Tick is a chore-planner **PWA**: a static site with no build step, no dependencies, no package manager.
-Users install it on their phone from a static host (see `README.txt`).
+Tick is a chore-planner **PWA**: the web app is a static site with no build step and no runtime dependencies (GitHub Pages serves the repo root).
+It is also wrapped as a native Android app with Capacitor (`android/`); npm is used only for that wrapper (see `README.txt`).
 
 ## Layout
 - `index.html`: the whole app. One inline `<style>` (CSS variables, light/dark) and one inline IIFE `<script>` (state, rendering, sound, confetti, alerts, bottom sheet). Plain ES5-style JS (`var`, function expressions); match it.
 - `sw.js`: service worker. Network-first (no HTTP cache) for app files with offline fallback, stale-while-revalidate for Google Fonts.
 - `manifest.webmanifest`: PWA manifest. Icons are in `icons/`.
-- `scripts/check.mjs`: sanity checks. `scripts/dev.sh`: local server.
+- `scripts/check.mjs`: sanity checks. `scripts/dev.sh`: local server. `scripts/build-web.mjs`: copies the web files into `www/` for Capacitor.
+- `capacitor.config.json`, `package.json`, `android/`: native Android shell (`com.cjdc007.tick`). `.github/workflows/android.yml` builds the APK/AAB in CI (the cloud env has no Android SDK, so it can't build locally).
 
 ## Commands
 - `node scripts/check.mjs`: parses the inline JS, verifies precached files, manifest icons and referenced assets exist. **Run before committing.**
@@ -20,7 +21,8 @@ Users install it on their phone from a static host (see `README.txt`).
 - Persistence is `localStorage` under key `tick:v1` with an in-memory fallback. State shape: `{chores, log, stats:{points,streak,lastDay}, sound}`. If you change the shape, stay backward compatible with existing saved data (`Object.assign` defaults at load) or migrate it.
 - Dates are local-time `YYYY-MM-DD` strings (`iso`/`parse` helpers), not UTC. Avoid `toISOString()` for day keys.
 - Keep it mobile-first: respect safe-area insets, `prefers-reduced-motion`, and light/dark themes (add colours as CSS variables in both palettes). Keep accessibility attributes (`aria-pressed`, `aria-selected`, focus-visible).
-- Alerts are in-page only (`checkAlerts`, while the app is open), not push notifications.
+- Web alerts are in-page only (`checkAlerts`, while the app is open). In the native app (`window.Capacitor`), `syncNative()` also schedules real local notifications via `Capacitor.Plugins.LocalNotifications` (no bundler: use the global, don't `import`). It reschedules from `save()`, so call `save()` after any chore change.
+- Native app changes: after editing web files, `npm run sync` refreshes `android/`. Keep `versionName`/`versionCode` in `android/app/build.gradle` and `package.json` in step with `APP_VERSION` (versionCode = MAJOR*10000+MINOR*100+PATCH). Never commit keystores (`.gitignore` blocks them).
 
 ## Workflow
 Develop on the branch you were assigned, commit with clear messages, push. Don't open a PR unless asked.

@@ -1,0 +1,9 @@
+{
+  "appId": "com.cjdc007.tick",
+  "appName": "Tick",
+  "webDir": "www",
+  "android": { "backgroundColor": "#0F1018" },
+  "plugins": {
+    "LocalNotifications": { "smallIcon": "ic_stat_tick", "iconColor": "#3D4DFF" }
+  }
+}

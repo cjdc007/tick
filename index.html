@@ -263,14 +263,14 @@ ul{list-style:none;margin:0;padding:0}
 'use strict';
 var $=function(s){return document.querySelector(s)};
 var KEY='tick:v1', memory=null;
-var APP_VERSION='1.4.1'; /* keep in step with CACHE_VERSION in sw.js */
+var APP_VERSION='1.5.0'; /* keep in step with CACHE_VERSION in sw.js */
 $('#ver').textContent='v'+APP_VERSION;
 var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- state ---------- */
 function load(){try{var r=localStorage.getItem(KEY);if(r)return JSON.parse(r)}catch(e){}return memory?JSON.parse(memory):null}
 var state=Object.assign({chores:[],log:[],stats:{points:0,streak:0,lastDay:null},sound:true},load()||{});
-function save(){var s=JSON.stringify(state);memory=s;try{localStorage.setItem(KEY,s)}catch(e){}}
+function save(){var s=JSON.stringify(state);memory=s;try{localStorage.setItem(KEY,s)}catch(e){}syncNative()}
 var uid=function(){return Math.random().toString(36).slice(2,9)};
 var tab='today', busy=new Set(), combo=0, lastCheck=0, lastUndo=null, undoTimer=0;
 
@@ -578,6 +578,40 @@ setInterval(function(){
   if(!busy.size&&!$('#wrap').classList.contains('open'))renderAll();
 },15000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden){checkAlerts();if(!busy.size)renderAll()}});
+/* ---------- native app (Capacitor): schedule real notifications so alerts fire when the app is closed ---------- */
+var LN=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications;
+var syncTimer=0,permAsked=false;
+function nid(s,i){var h=0;for(var k=0;k<s.length;k++)h=(h*31+s.charCodeAt(k))&0x7ffffff;return h*16+i}
+function nativeSchedule(){
+  var now=Date.now(),list=[];
+  state.chores.forEach(function(c){
+    var due=c.due,n=0;
+    for(var guard=0;guard<40&&n<(c.repeat?8:1);guard++){
+      var dueStr=due,dueAt=new Date(due+'T'+c.time).getTime(),at=dueAt-(c.remind||0)*60000;
+      if(at>now){
+        var lead=Math.round((dueAt-at)/60000);
+        list.push({id:nid(c.id,n),title:c.title,body:lead>0?'Due in '+span(lead)+' at '+timeLabel({due:dueStr,time:c.time}):'Due now',schedule:{at:new Date(at),allowWhileIdle:true},smallIcon:'ic_stat_tick'});
+        n++;
+      }
+      if(!c.repeat)break;
+      due=addInterval(due,c.repeat.every,c.repeat.unit,c.anchorDay);
+    }
+  });
+  return LN.getPending().then(function(p){return p.notifications.length?LN.cancel({notifications:p.notifications}):0})
+    .then(function(){return list.length?LN.schedule({notifications:list}):0});
+}
+function syncNative(){
+  if(!LN)return;
+  clearTimeout(syncTimer);
+  syncTimer=setTimeout(function(){
+    LN.checkPermissions().then(function(r){
+      if(r.display==='granted')return nativeSchedule();
+      if(r.display==='prompt'&&state.chores.length&&!permAsked){permAsked=true;return LN.requestPermissions().then(function(g){if(g.display==='granted')return nativeSchedule()})}
+    }).catch(function(){});
+  },300);
+}
+syncNative();
+
 /* ---------- orientation ---------- */
 try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(function(){})}catch(e){}
 

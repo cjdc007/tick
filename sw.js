@@ -1,6 +1,6 @@
 // Tick service worker: makes the app load offline.
 // Bump CACHE_VERSION whenever you change any app file so phones pick up the update.
-const CACHE_VERSION = 'tick-1.4.1';
+const CACHE_VERSION = 'tick-1.5.0';
 const FONT_CACHE = 'tick-fonts-v1';
 const APP_FILES = [
   './',

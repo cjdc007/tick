@@ -1,0 +1,20 @@
+{
+  "name": "tick",
+  "version": "1.5.0",
+  "private": true,
+  "description": "Tick: chore planner (web PWA + Capacitor native shell)",
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "build:web": "node scripts/build-web.mjs",
+    "sync": "npm run build:web && cap sync",
+    "android:open": "npm run sync && cap open android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "@capacitor/local-notifications": "^8.3.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2"
+  }
+}
