@@ -73,6 +73,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 /* list */
 ul{list-style:none;margin:0;padding:0}
 .group{font-family:var(--display);font-weight:600;font-size:15px;color:var(--muted);margin:20px 4px 10px}
+.period{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:16px 4px 8px}
+.period::after{content:"";flex:1;height:1px;background:var(--line)}
 .item{display:grid;grid-template-rows:1fr;transition:grid-template-rows .36s ease,opacity .3s ease}
 .item.leaving{grid-template-rows:0fr;opacity:0}
 .inner{overflow:hidden;min-height:0}
@@ -263,7 +265,7 @@ ul{list-style:none;margin:0;padding:0}
 'use strict';
 var $=function(s){return document.querySelector(s)};
 var KEY='tick:v1', memory=null;
-var APP_VERSION='1.5.0'; /* keep in step with CACHE_VERSION in sw.js */
+var APP_VERSION='1.6.0'; /* keep in step with CACHE_VERSION in sw.js */
 $('#ver').textContent='v'+APP_VERSION;
 var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -379,6 +381,15 @@ function row(c,showDay){
     '<div class="body"><div class="title"><span>'+esc(c.title)+'</span></div><div class="meta">'+m+'</div></div>'+
     '<button class="edit" aria-label="Edit '+esc(c.title)+'">'+PENCIL+'</button></div></div></li>';
 }
+var PERIODS=[['Morning',12],['Afternoon',17],['Evening',24]];
+function byPeriod(items,showDay){
+  var h='';
+  PERIODS.forEach(function(p,i){
+    var lo=i?PERIODS[i-1][1]:0,part=items.filter(function(c){var hr=parseInt(c.time,10)||0;return hr>=lo&&hr<p[1]});
+    if(part.length)h+='<h3 class="period">'+p[0]+'</h3><ul>'+part.map(function(c){return row(c,showDay)}).join('')+'</ul>';
+  });
+  return h;
+}
 function renderList(){
   var t=todayISO(),h='';
   if(tab==='today'){
@@ -395,12 +406,13 @@ function renderList(){
     }else{
       var over=items.filter(function(c){return c.due<t}),now=items.filter(function(c){return c.due===t});
       if(over.length)h+='<h2 class="group">Overdue</h2><ul>'+over.map(function(c){return row(c,true)}).join('')+'</ul>';
-      if(now.length)h+=(over.length?'<h2 class="group">Today</h2>':'<div style="height:10px"></div>')+'<ul>'+now.map(function(c){return row(c,false)}).join('')+'</ul>';
+      if(now.length)h+=(over.length?'<h2 class="group">Today</h2>':'')+byPeriod(now,false);
     }
   }else if(tab==='soon'){
     var up=state.chores.filter(function(c){return c.due>t}).sort(byTime);
     if(!up.length)h='<div class="empty"><h2>Nothing scheduled ahead</h2><p>Chores with a later date show up here.</p></div>';
-    else{var last='';up.forEach(function(c){if(c.due!==last){if(last)h+='</ul>';h+='<h2 class="group">'+esc(dayLabel(c.due))+'</h2><ul>';last=c.due}h+=row(c,false)});h+='</ul>'}
+    else{var days=[];up.forEach(function(c){var d=days[days.length-1];if(d&&d.due===c.due)d.items.push(c);else days.push({due:c.due,items:[c]})});
+      days.forEach(function(d){h+='<h2 class="group">'+esc(dayLabel(d.due))+'</h2>'+byPeriod(d.items,false)})}
   }else{
     if(!state.log.length)h='<div class="empty"><h2>Nothing done yet</h2><p>Chores you check off appear here.</p></div>';
     else h='<div style="height:12px"></div>'+state.log.map(function(l){
