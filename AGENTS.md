@@ -18,7 +18,7 @@ It is also wrapped as a native Android app with Capacitor (`android/`); npm is u
 ## Rules
 - **Bump the version on every change** to `index.html`, the manifest, or any icon. It is semantic (`MAJOR.MINOR.PATCH`): PATCH for fixes and polish, MINOR for new user-facing features, MAJOR for breaking changes (e.g. a saved-data format change that needs migration). Set it in two places that must match (`check.mjs` enforces it): `APP_VERSION` in `index.html` (`'1.4.1'`) and `CACHE_VERSION` in `sw.js` (`'tick-1.4.1'`). `APP_VERSION` is shown next to the Tick logo (as `v1.4.1`) so users can tell whether their phone has the latest build. Adding or renaming a file also means updating `APP_FILES`.
 - Keep it dependency-free and single-file. Don't add a bundler/framework without being asked. The only external resource is Google Fonts, and it must degrade gracefully offline (system font fallbacks are already in `--display`/`--body`).
-- Persistence is `localStorage` under key `tick:v1` with an in-memory fallback. State shape: `{chores, log, stats:{points,streak,lastDay}, sound}`. If you change the shape, stay backward compatible with existing saved data (`Object.assign` defaults at load) or migrate it.
+- Persistence is `localStorage` under key `tick:v1` with an in-memory fallback. State shape: `{chores, log, stats:{points,coins,streak,lastDay}, sound, pet:{species,name,full,at,owned,equipped}}`. `stats.points` is the lifetime total (drives level, never spent); `stats.coins` is the spendable balance (earned 1:1 with points). If you change the shape, stay backward compatible with existing saved data (`Object.assign` defaults at load) or migrate it.
 - Dates are local-time `YYYY-MM-DD` strings (`iso`/`parse` helpers), not UTC. Avoid `toISOString()` for day keys.
 - Keep it mobile-first: respect safe-area insets, `prefers-reduced-motion`, and light/dark themes (add colours as CSS variables in both palettes). Keep accessibility attributes (`aria-pressed`, `aria-selected`, focus-visible).
 - Web alerts are in-page only (`checkAlerts`, while the app is open). In the native app (`window.Capacitor`), `syncNative()` also schedules real local notifications via `Capacitor.Plugins.LocalNotifications` (no bundler: use the global, don't `import`). It reschedules from `save()`, so call `save()` after any chore change.
@@ -26,3 +26,8 @@ It is also wrapped as a native Android app with Capacitor (`android/`); npm is u
 
 ## Workflow
 Develop on the branch you were assigned, commit with clear messages, push. Don't open a PR unless asked.
+
+## Companion (Pet tab)
+- Fullness decays with time (`DECAY`), computed lazily from `pet.full` + `pet.at` via `fullNow()`. The pet never dies: below `HUNGRY_AT` it just looks sad. Keep it gentle; no permanent loss.
+- Add creatures in the `SPECIES` registry (`draw(mood, accessories)` returns SVG, `anchors` place hats/collars/toys). Add shop items to `ITEMS` (`slot`: food | hat | collar | toy; gear has `draw(x, y)`).
+- Never spend `stats.points`, only `stats.coins`. Undo and removing a Done entry take back the coins they gave (clamped at 0).
