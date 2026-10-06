@@ -298,7 +298,7 @@ button.chip{font:inherit;color:inherit;cursor:pointer}
 'use strict';
 var $=function(s){return document.querySelector(s)};
 var KEY='tick:v1', memory=null;
-var APP_VERSION='1.7.1'; /* keep in step with CACHE_VERSION in sw.js */
+var APP_VERSION='1.8.0'; /* keep in step with CACHE_VERSION in sw.js */
 $('#ver').textContent='v'+APP_VERSION;
 var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -545,7 +545,12 @@ var ITEMS=[
   {id:'crown',slot:'hat',name:'Crown',icon:'👑',price:120,draw:function(x,y){return '<g transform="translate('+x+' '+(y+2)+')"><path d="M-24 0L-26-26L-12-12L0-30L12-12L26-26L24 0Z" fill="#FFC533" stroke="#D99E10" stroke-width="2" stroke-linejoin="round"/><circle cx="0" cy="-10" r="3.5" fill="#E9344C"/></g>'}},
   {id:'bell',slot:'collar',name:'Bell collar',icon:'🔔',price:30,draw:function(x,y){return '<g transform="translate('+x+' '+y+')"><path d="M-32 -4Q0 18 32 -4" stroke="#E9344C" stroke-width="7" fill="none" stroke-linecap="round"/><circle cy="12" r="6.5" fill="#FFC533" stroke="#D99E10" stroke-width="1.5"/></g>'}},
   {id:'bandana',slot:'collar',name:'Bandana',icon:'🧣',price:60,draw:function(x,y){return '<g transform="translate('+x+' '+(y-2)+')"><path d="M-34-4Q0 10 34-4L0 32Z" fill="#17B890"/><circle cx="-6" cy="8" r="2" fill="#fff"/><circle cx="7" cy="6" r="2" fill="#fff"/><circle cx="0" cy="18" r="2" fill="#fff"/></g>'}},
-  {id:'yarn',slot:'toy',name:'Yarn ball',icon:'🧶',price:25,draw:function(x,y){return '<g transform="translate('+x+' '+y+')"><circle r="15" fill="#E9344C"/><path d="M-12-6Q0 2 12-8M-14 4Q0 12 13 2M-5-14Q4-4-2 14" stroke="#FF8A99" stroke-width="2" fill="none"/></g>'}}
+  {id:'yarn',slot:'toy',name:'Yarn ball',icon:'🧶',price:25,draw:function(x,y){return '<g transform="translate('+x+' '+y+')"><circle r="15" fill="#E9344C"/><path d="M-12-6Q0 2 12-8M-14 4Q0 12 13 2M-5-14Q4-4-2 14" stroke="#FF8A99" stroke-width="2" fill="none"/></g>'}},
+  {id:'mouse',slot:'toy',name:'Toy mouse',icon:'🐭',price:35,draw:function(x,y){return '<g transform="translate('+x+' '+(y+8)+')"><path d="M-14 4Q-30 6-26-8" stroke="#E8A0B0" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse rx="17" ry="10" fill="#B8BDCB"/><circle cx="6" cy="-8" r="6" fill="#B8BDCB"/><circle cx="6" cy="-8" r="3.2" fill="#F7B8B0"/><circle cx="-1" cy="-8" r="5" fill="#B8BDCB"/><circle cx="-1" cy="-8" r="2.6" fill="#F7B8B0"/><circle cx="11" cy="-1" r="1.8" fill="#2B2233"/><circle cx="16.5" cy="1.5" r="2.2" fill="#E88A8A"/></g>'}},
+  {id:'fish',slot:'toy',name:'Plush fish',icon:'🐠',price:45,draw:function(x,y){return '<g transform="translate('+x+' '+(y+8)+') rotate(-8)"><path d="M-17 0L-30-10V10Z" fill="#2E9FA6"/><ellipse rx="20" ry="11" fill="#4FC3C9"/><path d="M-4-10Q2 0-4 10M5-9Q10 0 5 9" stroke="#2E9FA6" stroke-width="2.5" fill="none"/><circle cx="12" cy="-3" r="2.6" fill="#fff"/><circle cx="12.6" cy="-3" r="1.3" fill="#2B2233"/></g>'}},
+  {id:'feather',slot:'toy',name:'Feather wand',icon:'🪶',price:55,draw:function(x,y){return '<g transform="translate('+x+' '+y+')"><path d="M-17 21L5-20" stroke="#8B5E3C" stroke-width="4" stroke-linecap="round"/><path d="M5-20C16-40 -4-40 -2-24C0-22 3-21 5-20Z" fill="#C77DFF"/><path d="M5-20C8-28 4-34 1-36" stroke="#8E44C9" stroke-width="1.8" fill="none"/><path d="M-1-30L5-26M0-34L6-30" stroke="#E4B8FF" stroke-width="1.5"/></g>'}},
+  {id:'box',slot:'toy',name:'Cardboard box',icon:'📦',price:70,draw:function(x,y){return '<g transform="translate('+(x-1)+' '+y+')"><path d="M-18-4L-20-14L-8-10ZM18-4L20-14L8-10Z" fill="#B5885A"/><rect x="-18" y="-6" width="36" height="25" rx="2" fill="#C69C6D"/><rect x="-18" y="-6" width="36" height="6" fill="#B5885A"/><rect x="-5" y="-6" width="10" height="25" fill="#E3C99B" opacity=".75"/></g>'}},
+  {id:'post',slot:'toy',name:'Scratching post',icon:'🪵',price:90,draw:function(x,y){return '<g transform="translate('+x+' '+y+')"><rect x="-20" y="16" width="40" height="6" rx="2" fill="#8B5E3C"/><rect x="-6" y="-30" width="12" height="47" fill="#D9B77E"/><path d="M-6-24H6M-6-16H6M-6-8H6M-6 0H6M-6 8H6" stroke="#B8935A" stroke-width="2"/><rect x="-15" y="-36" width="30" height="7" rx="3" fill="#8B5E3C"/></g>'}}
 ];
 var itemById=function(id){return ITEMS.filter(function(i){return i.id===id})[0]};
 function petSVG(extra){
