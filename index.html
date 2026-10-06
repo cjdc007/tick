@@ -122,8 +122,12 @@ ul{list-style:none;margin:0;padding:0}
 .app.on-pet .hello,.app.on-pet #petChip{display:none}
 .app.on-pet~.fab{display:none}
 button.chip{font:inherit;color:inherit;cursor:pointer}
-.petcard{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:14px 14px 16px;margin-top:12px;text-align:center}
-.petsvg{width:min(240px,70%);height:auto;display:block;margin:0 auto}
+.petstage{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 8px}
+.petcard{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:8px 14px 8px 8px}
+.petsvg{width:128px;height:auto;flex:none;display:block}
+.petinfo{flex:1;min-width:0}
+.coins{margin-top:8px;font-size:14px;color:var(--muted)}.coins b{color:var(--ink);font-family:var(--display);font-weight:800}
+.shopcats{margin:6px 0 12px}
 .petsvg .tail{transform-origin:146px 160px;animation:wag 2.4s ease-in-out infinite}
 .petsvg .blink{transform-origin:100px 90px;animation:blink 4.5s infinite}
 .petsvg.bounce{animation:hop .6s ease-out}
@@ -131,14 +135,13 @@ button.chip{font:inherit;color:inherit;cursor:pointer}
 @keyframes wag{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(12deg)}}
 @keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
 @keyframes hop{0%{transform:translateY(0)}30%{transform:translateY(-16px)}60%{transform:translateY(0)}80%{transform:translateY(-5px)}100%{transform:translateY(0)}}
-.pname{font-family:var(--display);font-weight:800;font-size:24px;background:none;border:0;display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border-radius:10px;color:var(--ink)}
+.pname{font-family:var(--display);font-weight:800;font-size:22px;background:none;border:0;display:inline-flex;align-items:center;gap:6px;padding:2px 8px 2px 0;border-radius:10px;color:var(--ink);max-width:100%}
 .pname svg{width:16px;height:16px;color:var(--muted)}
-.pstatus{margin:2px 0 12px;color:var(--muted)}
-.bar{height:12px;border-radius:999px;background:var(--line);overflow:hidden;margin:0 6px}
+.pstatus{margin:0 0 8px;color:var(--muted);font-size:14px;line-height:1.3}
+.bar{height:10px;border-radius:999px;background:var(--line);overflow:hidden}
 .bar i{display:block;height:100%;border-radius:999px;background:var(--mint);transition:width .5s}
 .bar.low i{background:var(--coral)}
-.barlab{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:0 8px 6px}
-.shop h2{font-family:var(--display);font-weight:600;font-size:15px;color:var(--muted);margin:22px 4px 10px}
+.barlab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:0 0 4px}
 .shop-row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:10px 12px;margin-bottom:8px}
 .shop-row .ico{font-size:26px;width:36px;text-align:center}
 .shop-row .nm{font-weight:600}.shop-row .ds{font-size:13px;color:var(--muted)}
@@ -295,7 +298,7 @@ button.chip{font:inherit;color:inherit;cursor:pointer}
 'use strict';
 var $=function(s){return document.querySelector(s)};
 var KEY='tick:v1', memory=null;
-var APP_VERSION='1.7.0'; /* keep in step with CACHE_VERSION in sw.js */
+var APP_VERSION='1.7.1'; /* keep in step with CACHE_VERSION in sw.js */
 $('#ver').textContent='v'+APP_VERSION;
 var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -565,14 +568,17 @@ function shopRow(it){
   else btn='<button class="go" data-buy="'+it.id+'"'+(coins<it.price?' disabled':'')+'>Buy · 🪙'+it.price+'</button>';
   return '<div class="shop-row"><span class="ico" aria-hidden="true">'+it.icon+'</span><div><div class="nm">'+esc(it.name)+'</div>'+(it.desc?'<div class="ds">'+it.desc+'</div>':'')+'</div>'+btn+'</div>';
 }
+var shopCat='food',SHOP_CATS=[['food','Food'],['hat','Hats'],['collar','Collars'],['toy','Toys']];
 function renderPet(){
-  var p=state.pet,sp=SPECIES[p.species]||SPECIES.cat,f=Math.round(fullNow()),sec=function(t,slot){return '<h2>'+t+'</h2>'+ITEMS.filter(function(i){return i.slot===slot}).map(shopRow).join('')};
-  return '<div class="petcard">'+petSVG()+
-    '<div><button class="pname" id="rename" aria-label="Rename '+esc(p.name)+'">'+esc(p.name)+PENCIL_S+'</button></div>'+
+  var p=state.pet,f=Math.round(fullNow());
+  return '<div class="petstage"><div class="petcard">'+petSVG()+
+    '<div class="petinfo"><button class="pname" id="rename" aria-label="Rename '+esc(p.name)+'">'+esc(p.name)+PENCIL_S+'</button>'+
     '<p class="pstatus">'+petStatus()+'</p>'+
-    '<div class="barlab"><span>Fullness</span><span>'+f+'%</span></div><div class="bar'+(f<HUNGRY_AT?' low':'')+'"><i style="width:'+f+'%"></i></div></div>'+
-    '<div class="shop"><p class="pstatus" style="margin:14px 4px 0">You have <b>🪙 '+state.stats.coins+'</b>. Earn coins by ticking off chores.</p>'+
-    sec('Food','food')+sec('Hats','hat')+sec('Collars','collar')+sec('Toys','toy')+'</div>';
+    '<div class="barlab"><span>Fullness</span><span>'+f+'%</span></div><div class="bar'+(f<HUNGRY_AT?' low':'')+'"><i style="width:'+f+'%"></i></div>'+
+    '<div class="coins">🪙 <b>'+state.stats.coins+'</b> coins</div></div></div></div>'+
+    '<div class="shop"><div class="seg shopcats" role="group" aria-label="Shop category">'+
+    SHOP_CATS.map(function(c){return '<button type="button" data-cat="'+c[0]+'" aria-pressed="'+(shopCat===c[0])+'">'+c[1]+'</button>'}).join('')+'</div>'+
+    ITEMS.filter(function(i){return i.slot===shopCat}).map(shopRow).join('')+'</div>';
 }
 function petAct(kind,id,btn){
   var it=itemById(id),p=state.pet;if(!it)return;
@@ -691,6 +697,8 @@ $('#soundBtn').addEventListener('click',function(){state.sound=!state.sound;save
 document.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){tab=b.dataset.tab;syncTabs();$('#list').scrollTop=0;renderList()})});
 $('#petChip').addEventListener('click',function(){tab='pet';syncTabs();$('#list').scrollTop=0;renderAll()});
 $('#list').addEventListener('click',function(e){
+  var sc=e.target.closest('[data-cat]');
+  if(sc){shopCat=sc.dataset.cat;renderList();return}
   var pb=e.target.closest('[data-feed],[data-buy],[data-wear]');
   if(pb){if(pb.disabled)return;if(pb.dataset.feed)petAct('feed',pb.dataset.feed,pb);else if(pb.dataset.buy)petAct('buy',pb.dataset.buy,pb);else petAct('wear',pb.dataset.wear,pb);return}
   if(e.target.closest('#rename')){var nn=prompt('Name your '+(SPECIES[state.pet.species]||SPECIES.cat).label,state.pet.name);if(nn&&nn.trim()){state.pet.name=nn.trim().slice(0,16);save();renderAll()}return}
