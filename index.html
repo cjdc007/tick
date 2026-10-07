@@ -176,9 +176,10 @@ ul{list-style:none;margin:0;padding:0}
 .btn.danger{background:none;color:var(--coral);border:1px solid var(--coral-soft)}
 
 /* sheet */
-.wrap{position:fixed;inset:0;z-index:40;display:none}
-.wrap.open{display:block}
-.scrim{position:absolute;inset:0;background:rgba(10,10,25,.5)}
+.wrap{position:fixed;inset:0;z-index:40;visibility:hidden;pointer-events:none;transition:visibility 0s linear .3s}
+.wrap.open{visibility:visible;pointer-events:auto;transition-delay:0s}
+.scrim{position:absolute;inset:0;background:rgba(10,10,25,.5);opacity:0}
+.wrap.open .scrim{opacity:1}
 .sheet{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;background:var(--surface);border-radius:28px 28px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));max-height:92%;overflow:auto;transform:translateY(100%);transition:transform .3s cubic-bezier(.2,.9,.3,1)}
 .wrap.open .sheet{transform:none}
 .sheet h2{font-family:var(--display);font-weight:800;font-size:24px;margin:0}
@@ -312,7 +313,7 @@ ul{list-style:none;margin:0;padding:0}
 'use strict';
 var $=function(s){return document.querySelector(s)};
 var KEY='tick:v1', memory=null;
-var APP_VERSION='1.9.0'; /* keep in step with CACHE_VERSION in sw.js */
+var APP_VERSION='1.9.1'; /* keep in step with CACHE_VERSION in sw.js */
 $('#ver').textContent='v'+APP_VERSION;
 var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -576,7 +577,7 @@ function petSVG(extra,id){
     var it=p.equipped[slot]&&itemById(p.equipped[slot]);
     if(it&&it.draw)acc[slot]=it.draw(sp.anchors[slot][0],sp.anchors[slot][1]);
   });
-  return '<svg '+(id===null?'':'id="petSvg" ')+'class="petsvg '+(m==='hungry'?'sad ':'')+(extra||'')+'" viewBox="0 0 200 200" role="img" aria-label="'+esc(p.name)+' the '+sp.label+' looks '+m+'">'+sp.draw(m,acc)+'</svg>';
+  return '<svg '+(id===null?'':'id="petSvg" ')+'class="petsvg '+(m==='hungry'?'sad ':'')+(extra||'')+'" viewBox="10 10 200 200" role="img" aria-label="'+esc(p.name)+' the '+sp.label+' looks '+m+'">'+sp.draw(m,acc)+'</svg>';
 }
 function petStatus(){
   var p=state.pet,m=moodOf(fullNow());

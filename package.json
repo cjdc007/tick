@@ -1,6 +1,6 @@
 {
   "name": "tick",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "private": true,
   "description": "Tick: chore planner (web PWA + Capacitor native shell)",
   "scripts": {
