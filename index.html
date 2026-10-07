@@ -55,12 +55,17 @@ button{font:inherit;color:inherit;cursor:pointer}
 .brand{font-family:var(--display);font-weight:800;font-size:18px;letter-spacing:-.01em}
 .ver{font-family:var(--body);font-weight:500;font-size:12px;color:var(--muted);margin-left:6px;letter-spacing:0}
 .sound{border:1px solid var(--line);background:var(--surface);border-radius:999px;height:36px;padding:0 14px;font-size:14px}
-.ring{position:relative;width:88px;height:88px;flex:none}
-.ring svg{width:100%;height:100%}
-.ring .track{fill:none;stroke:var(--line);stroke-width:9}
-.ring .prog{fill:none;stroke:var(--accent);stroke-width:9;stroke-linecap:round;stroke-dasharray:213.63;stroke-dashoffset:213.63;transition:stroke-dashoffset .7s cubic-bezier(.3,1.2,.4,1),stroke .3s}
-.ring.full .prog{stroke:var(--mint)}
-.ring .num{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:20px}
+/* header pet button + day progress bar */
+.petbtn{position:relative;flex:none;width:96px;height:96px;border-radius:30px;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;padding:0;overflow:visible}
+.petbtn:active{transform:scale(.96)}
+.petbtn .petsvg{width:84px;height:84px;margin:0}
+.petbtn .dot{position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;border-radius:999px;background:var(--coral);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center;border:2px solid var(--bg)}
+.dayprog{margin:14px 0 2px}
+.dayprog .lab{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);margin-bottom:6px}
+.dayprog .lab b{color:var(--ink);font-family:var(--display);font-weight:800}
+.dayprog .track{height:12px;border-radius:999px;background:var(--line);overflow:hidden}
+.dayprog .fill{height:100%;width:0;border-radius:999px;background:var(--accent);transition:width .7s cubic-bezier(.3,1.2,.4,1),background .3s}
+.dayprog.full .fill{background:var(--mint)}
 .chips{display:flex;gap:8px;margin:16px 0 4px;flex-wrap:wrap}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:500}
 .chip b{font-family:var(--display);font-weight:800}
@@ -119,12 +124,13 @@ ul{list-style:none;margin:0;padding:0}
 }
 
 /* pet */
-.app.on-pet .hello,.app.on-pet #petChip{display:none}
-.app.on-pet~.fab{display:none}
-button.chip{font:inherit;color:inherit;cursor:pointer}
-.petstage{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 8px}
+.petstage{padding:4px 0 8px;flex:none}
+.sheet.tall{height:92%;display:flex;flex-direction:column;overflow:hidden}
+.sheet.tall .grab{margin-bottom:6px;flex:none}
+.sheet.tall .grab::before{margin-bottom:0}
+.petbody{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .petcard{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:8px 14px 8px 8px}
-.petsvg{width:128px;height:auto;flex:none;display:block}
+.petsvg{width:128px;height:auto;flex:none;display:block;overflow:visible}
 .petinfo{flex:1;min-width:0}
 .coins{margin-top:8px;font-size:14px;color:var(--muted)}.coins b{color:var(--ink);font-family:var(--display);font-weight:800}
 .shopcats{margin:6px 0 12px}
@@ -243,22 +249,21 @@ button.chip{font:inherit;color:inherit;cursor:pointer}
       <h1 class="date" id="dateText"></h1>
       <p class="sub" id="subText"></p>
     </div>
-    <div class="ring" id="ring" role="img" aria-label="Today's progress">
-      <svg viewBox="0 0 88 88"><circle class="track" cx="44" cy="44" r="34"/><circle class="prog" id="prog" cx="44" cy="44" r="34" transform="rotate(-90 44 44)"/></svg>
-      <div class="num" id="ringNum">0</div>
-    </div>
+    <button class="petbtn" id="petBtn" type="button"></button>
   </section>
   <div class="chips">
     <span class="chip" id="streakChip"></span>
     <span class="chip" id="pointsChip"></span>
-    <button class="chip" id="petChip" type="button"></button>
+  </div>
+  <div class="dayprog" id="dayProg" role="progressbar" aria-label="Today's progress" aria-valuemin="0" aria-valuemax="100">
+    <div class="lab"><span id="progText"></span><span id="progPct"></span></div>
+    <div class="track"><div class="fill" id="progFill"></div></div>
   </div>
 
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" data-tab="today" aria-selected="true" id="tabToday">Today</button>
     <button class="tab" role="tab" data-tab="soon" aria-selected="false">Coming up</button>
     <button class="tab" role="tab" data-tab="done" aria-selected="false">Done</button>
-    <button class="tab" role="tab" data-tab="pet" aria-selected="false">Pet</button>
   </div>
   <div id="list"></div>
 </main>
@@ -293,12 +298,21 @@ button.chip{font:inherit;color:inherit;cursor:pointer}
   </div>
 </div>
 
+<div class="wrap" id="petWrap">
+  <div class="scrim" id="petScrim"></div>
+  <div class="sheet tall" role="dialog" aria-modal="true" aria-label="Your companion" id="petSheet" tabindex="-1">
+    <div class="grab" id="petGrab"></div>
+    <div id="petStageBox"></div>
+    <div class="petbody" id="petBody"></div>
+  </div>
+</div>
+
 <script>
 (function(){
 'use strict';
 var $=function(s){return document.querySelector(s)};
 var KEY='tick:v1', memory=null;
-var APP_VERSION='1.8.0'; /* keep in step with CACHE_VERSION in sw.js */
+var APP_VERSION='1.9.0'; /* keep in step with CACHE_VERSION in sw.js */
 $('#ver').textContent='v'+APP_VERSION;
 var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -396,16 +410,19 @@ function renderHeader(){
   var t=todayISO(),rem=todayList().length,done=doneToday(),total=rem+done;
   $('#dateText').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'short'});
   $('#subText').textContent=rem>0?rem+(rem===1?' chore':' chores')+' left today':total>0?'All done for today':'Nothing due today';
-  $('#prog').style.strokeDashoffset=213.63*(1-(total?done/total:0));
-  $('#ring').classList.toggle('full',total>0&&rem===0);
-  $('#ringNum').textContent=total?done+'/'+total:'0';
+  var pct=total?Math.round(done/total*100):0;
+  $('#progFill').style.width=pct+'%';
+  $('#dayProg').classList.toggle('full',total>0&&rem===0);
+  $('#dayProg').setAttribute('aria-valuenow',pct);
+  $('#progText').innerHTML=total?'<b>'+done+'</b> of <b>'+total+'</b> done today':'No chores today';
+  $('#progPct').textContent=total?pct+'%':'';
   var y=new Date();y.setDate(y.getDate()-1);
   var live=(state.stats.lastDay===t||state.stats.lastDay===iso(y))?state.stats.streak:0;
   $('#streakChip').innerHTML='🔥 <b>'+live+'</b> day streak';
   $('#pointsChip').innerHTML='🪙 <b>'+state.stats.coins+'</b> · level '+(Math.floor(state.stats.points/100)+1);
   var pf=fullNow(),pm=moodOf(pf),sp=SPECIES[state.pet.species]||SPECIES.cat;
-  $('#petChip').textContent=sp.emoji+' '+state.pet.name+(pm==='hungry'?' is hungry':pm==='happy'?' is happy':'');
-  $('#petChip').setAttribute('aria-label','Open '+state.pet.name+' the '+sp.label);
+  $('#petBtn').innerHTML=petSVG('',null)+(pm==='hungry'?'<span class="dot" aria-hidden="true">!</span>':'');
+  $('#petBtn').setAttribute('aria-label','Open '+state.pet.name+' the '+sp.label+(pm==='hungry'?' (hungry)':''));
   $('#tabToday').textContent='Today'+(rem?' ('+rem+')':'');
   $('#soundBtn').textContent=state.sound?'Sound on':'Sound off';
 }
@@ -431,7 +448,6 @@ function byPeriod(items,showDay){
 }
 function renderList(){
   var t=todayISO(),h='';
-  if(tab==='pet'){var keep=$('#list').scrollTop;$('#list').innerHTML=renderPet();$('#list').scrollTop=keep;return}
   if(tab==='today'){
     var items=todayList();
     if(!items.length){
@@ -461,7 +477,7 @@ function renderList(){
   }
   $('#list').innerHTML=h;
 }
-function renderAll(){renderHeader();renderList()}
+function renderAll(){renderHeader();renderList();if(petOpen)renderPetUI()}
 
 /* ---------- completing ---------- */
 function complete(id,btn){
@@ -486,6 +502,7 @@ function complete(id,btn){
   var x=r.left+r.width/2,yy=r.top+r.height/2;
   if(li)li.querySelector('.row').classList.add('celebrate');
   sfxCheck(combo);buzz(25);burst(x,yy);
+  var hp=document.querySelector('#petBtn .petsvg');if(hp){hp.classList.add('bounce');setTimeout(function(){hp.classList.remove('bounce')},650)}
   var f=document.createElement('div');f.className='float';f.style.left=x+'px';f.style.top=(yy-20)+'px';
   f.innerHTML='+'+pts+' 🪙'+(combo>0?'<small>Combo x'+(combo+1)+'</small>':'');document.body.appendChild(f);setTimeout(function(){f.remove()},1000);
   renderHeader();
@@ -553,13 +570,13 @@ var ITEMS=[
   {id:'post',slot:'toy',name:'Scratching post',icon:'🪵',price:90,draw:function(x,y){return '<g transform="translate('+x+' '+y+')"><rect x="-20" y="16" width="40" height="6" rx="2" fill="#8B5E3C"/><rect x="-6" y="-30" width="12" height="47" fill="#D9B77E"/><path d="M-6-24H6M-6-16H6M-6-8H6M-6 0H6M-6 8H6" stroke="#B8935A" stroke-width="2"/><rect x="-15" y="-36" width="30" height="7" rx="3" fill="#8B5E3C"/></g>'}}
 ];
 var itemById=function(id){return ITEMS.filter(function(i){return i.id===id})[0]};
-function petSVG(extra){
+function petSVG(extra,id){
   var p=state.pet,sp=SPECIES[p.species]||SPECIES.cat,m=moodOf(fullNow()),acc={};
   ['hat','collar','toy'].forEach(function(slot){
     var it=p.equipped[slot]&&itemById(p.equipped[slot]);
     if(it&&it.draw)acc[slot]=it.draw(sp.anchors[slot][0],sp.anchors[slot][1]);
   });
-  return '<svg id="petSvg" class="petsvg '+(m==='hungry'?'sad ':'')+(extra||'')+'" viewBox="0 0 200 200" role="img" aria-label="'+esc(p.name)+' the '+sp.label+' looks '+m+'">'+sp.draw(m,acc)+'</svg>';
+  return '<svg '+(id===null?'':'id="petSvg" ')+'class="petsvg '+(m==='hungry'?'sad ':'')+(extra||'')+'" viewBox="0 0 200 200" role="img" aria-label="'+esc(p.name)+' the '+sp.label+' looks '+m+'">'+sp.draw(m,acc)+'</svg>';
 }
 function petStatus(){
   var p=state.pet,m=moodOf(fullNow());
@@ -574,16 +591,28 @@ function shopRow(it){
   return '<div class="shop-row"><span class="ico" aria-hidden="true">'+it.icon+'</span><div><div class="nm">'+esc(it.name)+'</div>'+(it.desc?'<div class="ds">'+it.desc+'</div>':'')+'</div>'+btn+'</div>';
 }
 var shopCat='food',SHOP_CATS=[['food','Food'],['hat','Hats'],['collar','Collars'],['toy','Toys']];
-function renderPet(){
+var petOpen=false;
+function renderPetUI(){
   var p=state.pet,f=Math.round(fullNow());
-  return '<div class="petstage"><div class="petcard">'+petSVG()+
+  $('#petStageBox').innerHTML='<div class="petstage"><div class="petcard">'+petSVG()+
     '<div class="petinfo"><button class="pname" id="rename" aria-label="Rename '+esc(p.name)+'">'+esc(p.name)+PENCIL_S+'</button>'+
     '<p class="pstatus">'+petStatus()+'</p>'+
     '<div class="barlab"><span>Fullness</span><span>'+f+'%</span></div><div class="bar'+(f<HUNGRY_AT?' low':'')+'"><i style="width:'+f+'%"></i></div>'+
-    '<div class="coins">🪙 <b>'+state.stats.coins+'</b> coins</div></div></div></div>'+
-    '<div class="shop"><div class="seg shopcats" role="group" aria-label="Shop category">'+
+    '<div class="coins">🪙 <b>'+state.stats.coins+'</b> coins</div></div></div></div>';
+  var body=$('#petBody'),keep=body.scrollTop;
+  body.innerHTML='<div class="shop"><div class="seg shopcats" role="group" aria-label="Shop category">'+
     SHOP_CATS.map(function(c){return '<button type="button" data-cat="'+c[0]+'" aria-pressed="'+(shopCat===c[0])+'">'+c[1]+'</button>'}).join('')+'</div>'+
     ITEMS.filter(function(i){return i.slot===shopCat}).map(shopRow).join('')+'</div>';
+  body.scrollTop=keep;
+}
+function openPet(){petOpen=true;renderPetUI();$('#petWrap').classList.add('open');setTimeout(function(){$('#petSheet').focus()},60)}
+function closePet(){petOpen=false;$('#petWrap').classList.remove('open');$('#petSheet').style.transform='';$('#petScrim').style.opacity='';renderHeader()}
+function petClick(e){
+  var sc=e.target.closest('[data-cat]');
+  if(sc){shopCat=sc.dataset.cat;renderPetUI();return}
+  var pb=e.target.closest('[data-feed],[data-buy],[data-wear]');
+  if(pb){if(pb.disabled)return;if(pb.dataset.feed)petAct('feed',pb.dataset.feed,pb);else if(pb.dataset.buy)petAct('buy',pb.dataset.buy,pb);else petAct('wear',pb.dataset.wear,pb);return}
+  if(e.target.closest('#rename')){var nn=prompt('Name your '+(SPECIES[state.pet.species]||SPECIES.cat).label,state.pet.name);if(nn&&nn.trim()){state.pet.name=nn.trim().slice(0,16);save();renderAll()}}
 }
 function petAct(kind,id,btn){
   var it=itemById(id),p=state.pet;if(!it)return;
@@ -596,7 +625,7 @@ function petAct(kind,id,btn){
     state.stats.coins-=it.price;p.owned[it.id]=true;p.equipped[it.slot]=it.id;
   }else{p.equipped[it.slot]=p.equipped[it.slot]===it.id?null:it.id}
   save();renderAll();
-  var sv=$('#petSvg');if(sv&&kind!=='wear'){sv.classList.add('bounce');setTimeout(function(){sv.classList.remove('bounce')},650)}
+  var sv=$('#petStageBox .petsvg');if(sv&&kind!=='wear'){sv.classList.add('bounce');setTimeout(function(){sv.classList.remove('bounce')},650)}
   if(kind!=='wear'){sfxCheck(kind==='feed'?2:4);buzz(20);burst(x,y,22)}
 }
 
@@ -646,28 +675,30 @@ function openSheet(id,prefill){
   setTimeout(function(){$('#fTitle').focus()},60);
 }
 function closeSheet(){$('#wrap').classList.remove('open');$('#sheet').style.transform='';$('#scrim').style.opacity=''}
-/* drag the handle/title down to dismiss */
-(function(){
-  var sh=$('#sheet'),sc=$('#scrim'),y0=0,dy=0,t0=0,drag=false,pid=null;
-  function end(e){
+/* drag the handle/title down to dismiss (chore sheet and pet sheet) */
+function attachDrag(grab,sh,sc,close){
+  var y0=0,dy=0,t0=0,drag=false;
+  function end(){
     if(!drag)return;drag=false;sh.classList.remove('dragging');
     var fast=dy/Math.max(1,Date.now()-t0)>0.6;
     if(dy>110||(fast&&dy>30)){
       sh.style.transform='translateY(100%)';sc.style.opacity='0';
-      setTimeout(closeSheet,reduced?0:300);
+      setTimeout(close,reduced?0:300);
     }else{sh.style.transform='';sc.style.opacity=''}
   }
-  $('#grab').addEventListener('pointerdown',function(e){
-    drag=true;pid=e.pointerId;y0=e.clientY;dy=0;t0=Date.now();sh.classList.add('dragging');
-    try{this.setPointerCapture(pid)}catch(x){}
+  grab.addEventListener('pointerdown',function(e){
+    drag=true;y0=e.clientY;dy=0;t0=Date.now();sh.classList.add('dragging');
+    try{grab.setPointerCapture(e.pointerId)}catch(x){}
   });
-  $('#grab').addEventListener('pointermove',function(e){
+  grab.addEventListener('pointermove',function(e){
     if(!drag)return;dy=Math.max(0,e.clientY-y0);
     sh.style.transform='translateY('+dy+'px)';sc.style.opacity=String(Math.max(0,1-dy/sh.offsetHeight));
   });
-  $('#grab').addEventListener('pointerup',end);
-  $('#grab').addEventListener('pointercancel',end);
-})();
+  grab.addEventListener('pointerup',end);
+  grab.addEventListener('pointercancel',end);
+}
+attachDrag($('#grab'),$('#sheet'),$('#scrim'),closeSheet);
+attachDrag($('#petGrab'),$('#petSheet'),$('#petScrim'),closePet);
 function saveSheet(){
   var title=$('#fTitle').value.trim(),date=$('#fDate').value,time=$('#fTime').value,err=$('#err');
   function bad(m){err.textContent=m;var s=$('#sheet');s.classList.remove('shake');void s.offsetWidth;s.classList.add('shake')}
@@ -683,13 +714,13 @@ function saveSheet(){
   if(tab==='done')tab='today',syncTabs();
   renderAll();
 }
-function syncTabs(){document.querySelector('.app').classList.toggle('on-pet',tab==='pet');document.querySelectorAll('.tab').forEach(function(b){b.setAttribute('aria-selected',b.dataset.tab===tab)})}
+function syncTabs(){document.querySelectorAll('.tab').forEach(function(b){b.setAttribute('aria-selected',b.dataset.tab===tab)})}
 
 $('#fab').addEventListener('click',function(){openSheet()});
 $('#scrim').addEventListener('click',closeSheet);
 $('#saveBtn').addEventListener('click',saveSheet);
 $('#fTitle').addEventListener('keydown',function(e){if(e.key==='Enter')saveSheet()});
-addEventListener('keydown',function(e){if(e.key==='Escape')closeSheet()});
+addEventListener('keydown',function(e){if(e.key==='Escape'){closeSheet();closePet()}});
 $('#mOnce').addEventListener('click',function(){setMode('once')});
 $('#mRepeat').addEventListener('click',function(){setMode('repeat')});
 $('#qToday').addEventListener('click',function(){$('#fDate').value=todayISO()});
@@ -700,13 +731,10 @@ $('#delBtn').addEventListener('click',function(){
 });
 $('#soundBtn').addEventListener('click',function(){state.sound=!state.sound;save();renderHeader();if(state.sound)sfxCheck(0)});
 document.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){tab=b.dataset.tab;syncTabs();$('#list').scrollTop=0;renderList()})});
-$('#petChip').addEventListener('click',function(){tab='pet';syncTabs();$('#list').scrollTop=0;renderAll()});
+$('#petBtn').addEventListener('click',openPet);
+$('#petScrim').addEventListener('click',closePet);
+$('#petSheet').addEventListener('click',petClick);
 $('#list').addEventListener('click',function(e){
-  var sc=e.target.closest('[data-cat]');
-  if(sc){shopCat=sc.dataset.cat;renderList();return}
-  var pb=e.target.closest('[data-feed],[data-buy],[data-wear]');
-  if(pb){if(pb.disabled)return;if(pb.dataset.feed)petAct('feed',pb.dataset.feed,pb);else if(pb.dataset.buy)petAct('buy',pb.dataset.buy,pb);else petAct('wear',pb.dataset.wear,pb);return}
-  if(e.target.closest('#rename')){var nn=prompt('Name your '+(SPECIES[state.pet.species]||SPECIES.cat).label,state.pet.name);if(nn&&nn.trim()){state.pet.name=nn.trim().slice(0,16);save();renderAll()}return}
   var rm=e.target.closest('[data-rm]');
   if(rm){
     if(!rm.classList.contains('armed')){rm.classList.add('armed');rm.textContent='Remove?';return}
@@ -725,7 +753,7 @@ $('#list').addEventListener('click',function(e){
 renderAll();checkAlerts();
 setInterval(function(){
   checkAlerts();
-  if(!busy.size&&!$('#wrap').classList.contains('open'))renderAll();
+  if(!busy.size&&!petOpen&&!$('#wrap').classList.contains('open'))renderAll();
 },15000);
 document.addEventListener('visibilitychange',function(){if(!document.hidden){checkAlerts();if(!busy.size)renderAll()}});
 /* ---------- native app (Capacitor): schedule real notifications so alerts fire when the app is closed ---------- */
