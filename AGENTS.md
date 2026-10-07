@@ -27,7 +27,8 @@ It is also wrapped as a native Android app with Capacitor (`android/`); npm is u
 ## Workflow
 Develop on the branch you were assigned, commit with clear messages, push. Don't open a PR unless asked.
 
-## Companion (Pet tab)
+## Companion (pet sheet)
+- Entry point is the animated cat button in the header (`#petBtn`); it opens a drag-to-dismiss sheet (`#petSheet`, `openPet`/`closePet`/`renderPetUI`) with a fixed cat card on top and a scrolling shop below. There is no Pet tab. The header also has a day progress bar (`#dayProg`) instead of a ring.
 - Fullness decays with time (`DECAY`), computed lazily from `pet.full` + `pet.at` via `fullNow()`. The pet never dies: below `HUNGRY_AT` it just looks sad. Keep it gentle; no permanent loss.
 - Add creatures in the `SPECIES` registry (`draw(mood, accessories)` returns SVG, `anchors` place hats/collars/toys). Add shop items to `ITEMS` (`slot`: food | hat | collar | toy; gear has `draw(x, y)`).
 - Never spend `stats.points`, only `stats.coins`. Undo and removing a Done entry take back the coins they gave (clamped at 0).
